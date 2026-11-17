@@ -1,4 +1,5 @@
 import CategoriasTable from './components/CategoriasTable'
+import LugaresTable from './components/LugaresTable'
 
 function App() {
   return (
@@ -7,6 +8,7 @@ function App() {
       <p className="subtitulo">Guía de lugares históricos y turísticos</p>
 
       <CategoriasTable />
+      <LugaresTable />
     </main>
   )
 }

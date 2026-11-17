@@ -9,6 +9,7 @@ function LugaresTable() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
   const [formulario, setFormulario] = useState(formularioVacio)
+  const [editandoId, setEditandoId] = useState(null)
 
   // GET: trae la lista de lugares desde la API
   async function cargarLugares() {
@@ -51,24 +52,43 @@ function LugaresTable() {
     setFormulario({ ...formulario, [e.target.name]: e.target.value })
   }
 
-  // POST: crea un lugar nuevo
-  async function crearLugar(e) {
+  // POST (crear) o PUT (editar) según si estamos editando
+  async function guardarLugar(e) {
     e.preventDefault()
     setError(null)
+    const url = editandoId
+      ? `${API_URL}/lugares/${editandoId}/`
+      : `${API_URL}/lugares/`
     try {
-      const respuesta = await fetch(`${API_URL}/lugares/`, {
-        method: 'POST',
+      const respuesta = await fetch(url, {
+        method: editandoId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formulario),
       })
       if (!respuesta.ok) {
-        throw new Error('No se pudo crear el lugar')
+        throw new Error('No se pudo guardar el lugar')
       }
       setFormulario(formularioVacio)
+      setEditandoId(null)
       cargarLugares()
     } catch (err) {
       setError(err.message)
     }
+  }
+
+  function empezarEdicion(lugar) {
+    setEditandoId(lugar.id)
+    setFormulario({
+      nombre: lugar.nombre,
+      direccion: lugar.direccion,
+      descripcion: lugar.descripcion,
+      categoria: lugar.categoria,
+    })
+  }
+
+  function cancelarEdicion() {
+    setEditandoId(null)
+    setFormulario(formularioVacio)
   }
 
   // DELETE: elimina un lugar por su id
@@ -89,7 +109,7 @@ function LugaresTable() {
     <section className="tarjeta">
       <h2>Lugares</h2>
 
-      <form onSubmit={crearLugar}>
+      <form onSubmit={guardarLugar}>
         <input
           name="nombre"
           placeholder="Nombre"
@@ -124,7 +144,12 @@ function LugaresTable() {
             </option>
           ))}
         </select>
-        <button type="submit">Crear lugar</button>
+        <button type="submit">{editandoId ? 'Guardar cambios' : 'Crear lugar'}</button>
+        {editandoId && (
+          <button type="button" className="secundario" onClick={cancelarEdicion}>
+            Cancelar
+          </button>
+        )}
       </form>
 
       {cargando && <p className="cargando">Cargando lugares...</p>}
@@ -151,6 +176,9 @@ function LugaresTable() {
                 <td>{lugar.direccion}</td>
                 <td>{lugar.descripcion}</td>
                 <td>
+                  <button className="secundario" onClick={() => empezarEdicion(lugar)}>
+                    Editar
+                  </button>
                   <button className="peligro" onClick={() => eliminarLugar(lugar.id)}>
                     Eliminar
                   </button>
